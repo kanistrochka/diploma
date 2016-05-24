@@ -7,11 +7,12 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <link rel="stylesheet" href="./Framework7/build/css/framework7.ios.css">
-    <link rel="stylesheet" href="./Framework7/build/css/framework7.ios.colors.css">
-    <link rel="stylesheet" href="./Framework7/kitchen-sink-ios/css/kitchen-sink.css">
-    <link rel="icon" href="./Framework7/kitchen-sink-ios/img/icon.png">
-    <link rel="apple-touch-icon" href="./Framework7/kitchen-sink-ios/img/icon.png">
+    <!--<link rel="stylesheet" href="./Framework7/build/css/framework7.ios.min.css">-->
+    <!--<link rel="stylesheet" href="./Framework7/build/css/framework7.material.min.css">-->
+    <!--<link rel="stylesheet" href="./Framework7/build/css/framework7.ios.colors.css">-->
+    <!--<link rel="stylesheet" href="./Framework7/kitchen-sink-ios/css/kitchen-sink.css">-->
+    <!--<link rel="icon" href="./Framework7/kitchen-sink-ios/img/icon.png">-->
+    <!--<link rel="apple-touch-icon" href="./Framework7/kitchen-sink-ios/img/icon.png">-->
 </head>
 <body>
 	<select id="sample">
@@ -22,6 +23,14 @@
 		<option>sample2</option>
 	</select>
 	<button id="btnexec" type="button">Выполнить</button>
+    <div class="row" style="width:90%;margin-left: auto;margin-right: auto;">
+        <div class="col-50">
+        <a href="#" class="button changestyle" onclick="release_to_ios()">iOS style</a>
+        </div>
+        <div class="col-50">
+        <a href="#" class="button changestyle" onclick="release_to_material()">Android style</a>
+        </div>
+    </div>
     <div class="views">
         <div id="output" class="view view-main"></div>
     </div>
@@ -40,7 +49,45 @@
 	}, false);
 	
     </script>
-    <script type="text/javascript" src="./Framework7/build/js/framework7.js"></script>
-    <script type="text/javascript" src="./Framework7/kitchen-sink-ios/js/kitchen-sink.js"></script>
+    <script type="text/javascript" src="./Framework7/build/js/framework7.min.js"></script>
+    <script>
+        Dom7('head').append(
+            '<link rel="stylesheet" href="./Framework7/build/css/framework7.ios.min.css">' +
+            '<link rel="stylesheet" href="./Framework7/build/css/framework7.ios.colors.min.css">'
+        );
+        var cs1 = Dom7('head link').eq(-1), cs2 = Dom7('head link').eq(-2);
+        
+        function release_to_ios(){
+            cs1.remove(); cs2.remove();
+            Dom7('head').append(
+                '<link rel="stylesheet" href="./Framework7/build/css/framework7.ios.min.css">' +
+                '<link rel="stylesheet" href="./Framework7/build/css/framework7.ios.colors.min.css">'
+            );
+            cs1 = Dom7('head link').eq(-1), cs2 = Dom7('head link').eq(-2);
+        }
+        
+        function release_to_material(){
+            cs1.remove(); cs2.remove();
+            Dom7('head').append(
+                '<link rel="stylesheet" href="./Framework7/build/css/framework7.material.min.css">' +
+                '<link rel="stylesheet" href="./Framework7/build/css/framework7.material.colors.min.css">'
+            );
+            cs1 = Dom7('head link').eq(-1), cs2 = Dom7('head link').eq(-2);
+        }
+      /*(function () {
+        if (0) {
+              Dom7('head').append(
+                  '<link rel="stylesheet" href="./Framework7/build/css/framework7.material.min.css">' +
+                  '<link rel="stylesheet" href="./Framework7/build/css/framework7.material.colors.min.css">'
+              ).remove();
+          }
+          else {
+              Dom7('head').append(
+                  '<link rel="stylesheet" href="./Framework7/build/css/framework7.ios.min.css">' +
+                  '<link rel="stylesheet" href="./Framework7/build/css/framework7.ios.colors.min.css">'
+              ).remove();
+          }
+      })();*/
+    </script>
 </body>
 </html>
