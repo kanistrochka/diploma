@@ -8,13 +8,11 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">-->
     <style type="text/css">
         @import "./css/bootstrap.css";
 
         .device-ios, .device-android {
-            margin-left: 60px;
-            margin-top: 10px;
+            margin: 10px;
             float: left;
         }
 
@@ -26,7 +24,6 @@
             box-shadow: 0px 0px 0px 2px #aaa;
             padding: 105px 20px;
             position: relative;
-            margin-right: 80px;
         }
 
         .device-ios:before {
@@ -90,11 +87,19 @@
             background: #444;
             top: 30px;
         }
+        
+        .device-ios .pages{
+            padding-top:0px;
+            height: calc(100% - 44px);
+        }
+        .device-android .pages{
+            height: calc(100% - 56px);
+        }
     </style>
 </head>
-<body style="overflow:scroll;background:linear-gradient(to top, #fe521e, #D41E88);">
+<body style="overflow:auto;background:linear-gradient(to top, #fe521e, #D41E88);">
 <div class="row">
-    <div class="col-33" style="min-width: 266px">
+    <div style="min-width:33%; max-width:370px; width:33%;">
         <div id="phone" class="device device-ios">
             <div class="views">
                 <div class="navbar" style="position:static;">
@@ -114,19 +119,23 @@
             </div>
         </div>
     </div>
-    <div class="col-66" style="padding:20px;">
-        <div class="bs-panel bs-panel-default">
+    <div style="min-width:30%; max-width:63%; padding:20px; width:100%">
+        <div class="bs-panel bs-panel-default col-100">
             <div class="bs-panel-heading">
                 <h3 class="bs-panel-title">Параметры</h3>
             </div>
-            <div class="bs-panel-body form-group">
-                <a href="#" class="btn btn-default" onclick="release_to_ios()">iOS style</a>
-                <a href="#" class="btn btn-default" onclick="release_to_material()">Android style</a>
-                <input type="text" class="form-control" id="usr">
+            <div class="row bs-panel-body form-group">
+                <div class="col-33">
+                    <a href="#" class="btn btn-default" onclick="release_to_ios()">iOS style</a>
+                    <a href="#" class="btn btn-default" onclick="release_to_material()">Android style</a>
+                </div>
+                <div class="col-66">
+                    <input type="text" class="form-control" id="usr" />
+                </div>
             </div>
         </div>
 
-        <div class="bs-panel bs-panel-default">
+        <div class="bs-panel bs-panel-default col-100">
             <div class="bs-panel-heading">
                 <h3 class="bs-panel-title">Элементы</h3>
             </div>
