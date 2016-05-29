@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>модель</title>
+    <meta charset="utf-8"/>
+</head>
+<body>
+<div id="current_page"></div>
+<script type="text/javascript">
+    'use strict';    
+    //0 - текущая страница, 1 - текущий элемент
+    var param = [];
+    var param_page_elem = []
+    
+    //обновить представление по измененным параметрам
+    Array.observe(param, function(changes){
+        console.log(changes);
+    });
+    
+    var current = {
+        _page: 0,
+        _element: 0
+    }
+    
+    // being explicit
+    Object.defineProperty(current, 'page', {
+        enumerable: true,
+        configurable: false,
+        get: function(){ return current._page; },
+        set: function(value){
+            current._page = value;
+            current_page.innerHTML = '';
+            app.pages[value].forEach(function(element, index){ //i, arr
+                var type;
+                if(!!element){
+                   type = element[0];
+                   types[element[0]].create();
+                   types[element[0]].update(index, element[1])
+                } else {
+                    current_page.insertAdjacentHTML('beforeend', '<span></span>');
+                }
+            });
+        }
+    });
+    
+    var types = {
+        top_menu: ['back_icon', 'back_text', 'title', 'btn_menu'],
+        tabs: ['tab1', 'tab2', 'tab3', 'tab4', 'tab5'],
+        searchbar: ['placeholder'],
+        bottom_menu: ['item1', 'item2', 'item3', 'item4', 'item5'],
+        text: {
+            params: ['content'],
+            create: function(){
+                current_page.insertAdjacentHTML('beforeend', '<p></p>');
+            }, update: function(page_index, param_index){               
+                this.params.forEach(function(a, i, arr){
+                    if(a == 'content') current_page.childNodes[page_index].textContent = param[param_index];
+                });
+            }
+        }
+    }
+    
+    function add_page_element(page, type, params){
+        var len = param.length, len2;
+        //добавление в массив param
+        if(!!app.pages[page]){
+            len2 = app.pages[page].length;
+            app.pages[page].push([type, len]);
+            types[type].params.forEach(function(a, i, arr){
+                param.push(params[a]);
+                if(!param_page_elem[len + i]){
+                    param_page_elem.push([]);
+                }
+                param_page_elem[len + i].push(page, len2)
+                    
+            })
+        }
+    }
+    
+    function add_current_page_element(type, params){
+        add_page_element(current.page, type, params);
+        
+    }
+    
+    //0 - верхнее меню, 1- табы, 2 - поиск, 3 - нижнее меню, 4 - .. - элементы
+    var app = {
+        pages: [
+            [
+                null, //['top_menu', 0],
+                null, //['tabs', 4],
+                null, //['searchbar', 9],
+                null //['bottom_menu', 10]
+            ]
+        ],
+        modals: [],
+        notifications: []
+    }
+    
+    
+    add_current_page_element('text', {content: 'Рома'});
+    add_current_page_element('text', {content: 'Лера'});
+    add_current_page_element('text', {content: 'Лера3'});
+    add_current_page_element('text', {content: '28 мая'});
+    current.page = 0;
+
+</script>
+</body>
+</html>
