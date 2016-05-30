@@ -8,8 +8,14 @@
 </head>
 
 <body>
-    <div id="field_panel"></div>
-    <div id="current_page"></div>
+    <div style="border:1px solid black">
+        <select style="width:100%;" id="current_element_select"></select>
+    </div>
+    <div id="field_panel" style="border:1px solid black"></div>
+    <div style="border:1px solid black">
+        <select style="width:100%;" id="current_page_select"></select>
+    </div>
+    <div id="current_page" style="border:1px solid black"></div>
     <script type="text/javascript">
     'use strict';
     //обновить представление по измененным параметрам
@@ -23,13 +29,32 @@
         }
     }
     
+    Dom7(current_element_select).change(function(e){
+        current.element = this.value>>0;
+    });
+    
+    Dom7(current_page_select).change(function(e){
+        current.page = this.value>>0;
+    });
+    
     // being explicit
     Object.defineProperties(current, {
         'page': {
             enumerable: true,
             configurable: false,
             get: function(){ return app.pages[this._page]; },
-            set: function(value){ this._page = value; }
+            set: function(value){
+                this._page = value;
+                Dom7(current_page).html('');
+                if(!!app.pages[this._page]){
+                    app.pages[this._page].forEach(function(a, index, arr){
+                        var option = Dom7(current_element_select).append('<option></option>').children().eq(-1);
+                        option.attr('value', index).text(index + ': ' + a.type);
+                        Dom7(current_page).append(types[a.type][a.type].get_view());
+                    });
+                    current.element = 0;
+                }
+            }
         }, 'element': {
             enumerable: true,
             configurable: false,
@@ -37,7 +62,9 @@
             set: function(value){
                 this._element = value;
                 Dom7(field_panel).html('');
-                out_element_param_fields(app.pages[this._page][this._element]);
+                if(!!app.pages[this._page][this._element]){
+                    out_element_param_fields(app.pages[this._page][this._element]);
+                }
             }
         }
     });
@@ -51,7 +78,6 @@
             //установка в модели значения по умолчанию
             if(param != type) model[param] = types[type][param].default;
         });
-        Object.observe(model, update_changes); //реакция на изменение
         return index;
     }
     
@@ -60,21 +86,44 @@
         else if(!view.hasClass(class_name) && !!is_add) view.addClass(class_name);
     }
     
-    function update_changes(changes){
-        changes.forEach(update_change);
-    }
-    
-    function update_change(change){
-        var view = Dom7(current_page).children().eq(change.object.index[1]);
-        types[change.object.type][change.name].update(change.name, change.type, change.object, view, change.oldValue);
-    }
-    
     function out_element_param_fields(model){
         Object.keys(types[model.type]).forEach(function(param){
+            var p, label, input, param_obj;
+            param_obj = types[model.type][param];
             if(param != model.type){
-                types[model.type][param].field(model, param);
+                p = Dom7(field_panel).append('<p></p>').children().eq(-1);
+                
+                label = p.append('<label></label>').children().eq(-1);
+                label.text(param_obj.field_label);
+                
+                if(param_obj.field_type == 'input'){
+                    input = p.append('<input type="text" />').children().eq(-1);
+                } else if(param_obj.field_type == 'checkbox'){
+                    input = p.append('<input type="checkbox" />').children().eq(-1);
+                } else if(param_obj.field_type == 'select'){
+                    input = p.append('<select></select>').children().eq(-1);
+                    if(param_obj.field_options instanceof Array)
+                        param_obj.field_options.forEach(function(a, i, arr){
+                        var optgroup = input, optlabel = a.substring(0, 9);
+                        if(optlabel == 'optgroup-'){
+                            optgroup = input.append('<optgroup></optgroup>').children().eq(-1);
+                            optlabel = a.substring(9);
+                            optgroup.attr('label', optlabel);
+                        } else {
+                            optgroup.append('<option></option>').children().eq(-1).text(a);
+                        }
+                        
+                    });
+                }
+                input.change(change_parameter.bind(input[0], model, param));
             }
         });
+    }
+    
+    function change_parameter(model, param, e){
+        var old = model[param];
+        model[param] = this.value;
+        types[model.type][param].update(param, 'update', model, Dom7(current_page).children().eq(model.index[1]), old);
     }
     
     var types = {
@@ -93,15 +142,17 @@
                 },
                 //функция создания параметра в представлении параметров
                 field: function(model, param){
-                    Dom7(field_panel).append('<p></p>')
+                    var input = Dom7(field_panel).append('<p></p>')
                     .children().eq(-1)
                     .append('<label>Содержимое</label>')
                     .append('<input type="text" />')
-                    .children().eq(-1)
-                    .change(function(e){
-                        model[param] = this.value;
-                    });
-                }
+                    .children().eq(-1);
+                    
+                    input.change(change_parameter.bind(input[0], model, param));
+                },
+                field_type: 'input',
+                field_label: 'Содержимое',
+                field_options: null
             }
         },
         button: {
@@ -115,48 +166,27 @@
                 update: function(name, type, model, view, old){
                     view.text(model[name] || '');
                 },
-                field: function(model, param){
-                    Dom7(field_panel).append('<p></p>')
-                    .children().eq(-1)
-                    .append('<label>Текст</label>')
-                    .append('<input type="text" />')
-                    .children().eq(-1)
-                    .change(function(e){
-                        model[param] = this.value;
-                    });
-                }
+                field_type: 'input',
+                field_label: 'Текст',
+                field_options: null
             },
             'active': {
                 default: false,
                 update: function(name, type, model, view, old){
                     change_class(view, 'active', model[name]);
                 },
-                field: function(model, param){
-                    Dom7(field_panel).append('<p></p>')
-                    .children().eq(-1)
-                    .append('<label>Активность</label>')
-                    .append('<input type="checkbox" />')
-                    .children().eq(-1)
-                    .change(function(e){
-                        model[param] = this.checked;
-                    });
-                }
+                field_type: 'input',
+                field_label: 'Текст',
+                field_options: null
             },
             'round': {
                 default: false,
                 update: function(name, type, model, view, old){
                     change_class(view, 'button-round', model[name]);
                 },
-                field: function(model, param){
-                    Dom7(field_panel).append('<p></p>')
-                    .children().eq(-1)
-                    .append('<label>Округленность</label>')
-                    .append('<input type="checkbox" />')
-                    .children().eq(-1)
-                    .change(function(e){
-                        model[param] = this.checked;
-                    });
-                }
+                field_type: 'select',
+                field_label: 'Текст',
+                field_options: ['optgroup-варианты', 'закругленный', 'незакругленный']
             }
         }
     }
@@ -176,9 +206,13 @@
     current.page = 0;
     
     current.add_element('text');
-    current.element.content = 'Текст';
     current.add_element('button');
-    current.element.text = 'Кнопка';
+    
+    app.pages.forEach(function(a, index, arr){
+        var option = Dom7(current_page_select).append('<option></option>').children().eq(-1);
+        option.attr('value', index).text('Страница ' + index);
+    })
+    
     </script>
 </body>
 
