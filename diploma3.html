@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>модель</title>
+    <meta charset="utf-8" />
+    <script type="text/javascript" src="./Framework7/build/js/framework7.min.js"></script>
+</head>
+
+<body>
+<div id="field_panel"></div>
+<div id="current_page"></div>
+<script type="text/javascript">
+    'use strict';
+    //обновить представление по измененным параметрам
+
+    var current = {
+        _page: 0,
+        _element: 0,
+        add_element: function(type){
+            this.element = add_page_element(this._page, type); //добавление элемента в модель
+            Dom7(current_page).append(types[type][type].get_view()); //вставка в DOM
+        }
+    };
+
+    // being explicit
+    Object.defineProperties(current, {
+        'page': {
+            enumerable: true,
+            configurable: false,
+            get: function(){ return app.pages[this._page]; },
+            set: function(value){ this._page = value; }
+        }, 'element': {
+            enumerable: true,
+            configurable: false,
+            get: function(){ return app.pages[this._page][this._element]; },
+            set: function(value){
+                this._element = value;
+                Dom7(field_panel).html('');
+                out_element_param_fields(app.pages[this._page][this._element]);
+            }
+        }
+    });
+
+    function add_page_element(page, type){
+        var index = app.pages[page].length; //индекс вставляемого элемента
+        var model = {type: type}; //вставляемый элемент
+        app.pages[page].push(model); //вставка элемента в модель
+        model.index = [page, index]; //в элементе его координаты
+        Object.keys(types[type]).forEach(function(param){
+            //установка в модели значения по умолчанию
+            if(param != type) model[param] = types[type][param].default;
+        });
+        Object.observe(model, update_changes); //реакция на изменение
+        return index;
+    }
+
+    function change_class(view, class_name, is_add){
+        if(view.hasClass(class_name) && !is_add) view.removeClass(class_name);
+        else if(!view.hasClass(class_name) && !!is_add) view.addClass(class_name);
+    }
+
+    function update_changes(changes){
+        changes.forEach(update_change);
+    }
+
+    function update_change(change){
+        var view = Dom7(current_page).children().eq(change.object.index[1]);
+        types[change.object.type][change.name].update(change.name, change.type, change.object, view, change.oldValue);
+    }
+
+    function out_element_param_fields(model){
+        Object.keys(types[model.type]).forEach(function(param){
+            if(param != model.type){
+                types[model.type][param].field(model, param);
+            }
+        });
+    }
+
+    var types = {
+        text: {
+            'text': {
+                get_view: function () {
+                    return '<p></p>';
+                }
+            },
+            'content': {
+                //значение по умолчанию
+                default: '',
+                //функция обновления элемента DOM в представлении-макете
+                update: function (name, type, model, view, old) {
+                    view.text(model[name] || '');
+                },
+                //функция создания параметра в представлении параметров
+                field: function (model, param) {
+                    Dom7(field_panel).append('<p></p>')
+                            .children().eq(-1)
+                            .append('<label>Содержимое</label>')
+                            .append('<input type="text" />')
+                            .children().eq(-1)
+                            .change(function (e) {
+                                model[param] = this.value;
+                            });
+                }
+            }
+        },
+        button: {
+            'button': {
+                get_view: function () {
+                    return '<a href="#" class="button"></a>';
+                }
+            },
+            'text': {
+                default: '',
+                update: function (name, type, model, view, old) {
+                    view.text(model[name] || '');
+                },
+                field: function (model, param) {
+                    Dom7(field_panel).append('<p></p>')
+                            .children().eq(-1)
+                            .append('<label>Текст</label>')
+                            .append('<input type="text" />')
+                            .children().eq(-1)
+                            .change(function (e) {
+                                model[param] = this.value;
+                            });
+                }
+            },
+            'active': {
+                default: false,
+                update: function (name, type, model, view, old) {
+                    change_class(view, 'active', model[name]);
+                },
+                field: function (model, param) {
+                    Dom7(field_panel).append('<p></p>')
+                            .children().eq(-1)
+                            .append('<label>Активность</label>')
+                            .append('<input type="checkbox" />')
+                            .children().eq(-1)
+                            .change(function (e) {
+                                model[param] = this.checked;
+                            });
+                }
+            },
+            'round': {
+                default: false,
+                update: function (name, type, model, view, old) {
+                    change_class(view, 'button-round', model[name]);
+                },
+                field: function (model, param) {
+                    Dom7(field_panel).append('<p></p>')
+                            .children().eq(-1)
+                            .append('<label>Округленность</label>')
+                            .append('<input type="checkbox" />')
+                            .children().eq(-1)
+                            .change(function (e) {
+                                model[param] = this.checked;
+                            });
+                }
+            },
+            'big': {
+                default: false,
+                update: function (name, type, model, view, old) {
+                    change_class(view, 'button-big', model[name]);
+                },
+                field: function (model, param) {
+                    Dom7(field_panel).append('<p></p>')
+                            .children().eq(-1)
+                            .append('<label>Большая</label>')
+                            .append('<input type="checkbox" />')
+                            .children().eq(-1)
+                            .change(function (e) {
+                                model[param] = this.checked;
+                            });
+                }
+            },
+            'raised': {
+                default: false,
+                update: function (name, type, model, view, old) {
+                    change_class(view, 'button-raised', model[name]);
+                },
+                field: function (model, param) {
+                    Dom7(field_panel).append('<p></p>')
+                            .children().eq(-1)
+                            .append('<label>Объем</label>')
+                            .append('<input type="checkbox" />')
+                            .children().eq(-1)
+                            .change(function (e) {
+                                model[param] = this.checked;
+                            });
+                }
+            },
+            'color': {
+                default: '',
+                update: function (name, type, model, view, old) {
+                    change_class(view, '', model[name]);
+                },
+                field: function (model, param) {
+                    var select = Dom7(field_panel).append('<select></select>')
+                            .children().eq(-1);
+
+                    var optgroup = select
+                            .append('<optgroup label="Material"></optgroup>')
+                            .children().eq(-1);
+
+                    ['red','pink' ,'purple','deeppurple','indigo','blue' ,'lightblue','cyan' ,'teal' ,'green','lightgreen','lime' ,'yellow', 'amber','orange','deeporange','brown','gray' ,'bluegray','black'].forEach(function (color) {
+                        optgroup.append('<option>' + color + '</option>');
+                    });
+
+                    optgroup = select
+                            .append('<optgroup label="iOS"></optgroup>')
+                            .children().eq(-1);
+
+                    ['white','blue','orange','red','pink' ,'green' ,'lightblue','yellow' ,'gray'].forEach(function (color) {
+                        optgroup.append('<option>' + color + '</option>');
+                    });
+                }
+            }
+        }
+    };
+    //0 - верхнее меню, 1- табы, 2 - поиск, 3 - нижнее меню, 4 - .. - элементы
+    var app = {
+        pages: [
+            [ //страница
+            ],
+            [ //страница
+            ]
+        ],
+        modals: [],
+        notifications: []
+    };
+
+    current.page = 0;
+
+    current.add_element('text');
+    current.element.content = 'Текст';
+    current.add_element('button');
+    current.element.text = 'Кнопка';
+</script>
+</body>
+
+</html>
