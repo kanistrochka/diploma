@@ -5,6 +5,9 @@
     <title>модель</title>
     <meta charset="utf-8" />
     <script type="text/javascript" src="./Framework7/build/js/framework7.min.js"></script>
+    <link rel="stylesheet" class="linkcss" href="./Framework7/build/css/framework7.material.min.css">
+    <link rel="stylesheet" class="linkcss" href="./Framework7/build/css/framework7.material.colors.min.css">
+    <link rel="stylesheet" class="linkcss" href="./Framework7/kitchen-sink-material/css/kitchen-sink.css">
 </head>
 
 <body>
@@ -188,7 +191,65 @@
                 field_label: 'Текст',
                 field_options: ['optgroup-варианты', 'закругленный', 'незакругленный']
             }
+        },
+        input_field: {
+            'input_field' : {
+                get_view: function(){
+                    return '<div class="item-inner"> <div class="item-title label">Label</div> <div class="item-input"> <input type="text" placeholder="Введите текст"/> </div> </div>';
+                }
+            },
+            /*'label' : {
+                default: 'Текст',
+                update: function(name, type, model, view, old){
+                    change_class(view, 'active', model[name]);
+                },
+                field_type: 'input',
+                field_label: 'Текст',
+                field_options: null
+            },*/
+            'placeholder' : {
+                default: 'Введите текст',
+                update: function(name, type, model, view, old){
+                    view.child().prop('placeholder', model[name] || '');
+                },
+                field_type: 'input',
+                field_label: 'Текст',
+                field_options: null
+            }
+        },
+        switch : {
+            'switch' : {
+                get_view: function(){
+                    return '<div class="item-input">'+
+                            '<label class="label-switch">'+
+                            '<input type="checkbox"/>'+
+                            '<div class="checkbox"></div>'+
+                            '</label>'+
+                            '</div>';
+                }
+            },
+            'switched' : {
+                default: false,
+                update: function(name, type, model, view, old){
+                    change_class(view.child(), 'active-state', model[name]);
+                },
+                field_type: 'checkbox',
+                field_label: 'Включить',
+                field_options: null
+            }
+        },
+        slider : {
+            'slider' : {
+                get_view: function(){
+                    return '<div class="item-input">'+
+                            '<div class="range-slider">'+
+                            '<input type="range" min="0" max="100" value="50" step="0.1"/>'+
+                            '</div>' +
+                            '</div>';
+                }
+            }
         }
+
     }
     
     //0 - верхнее меню, 1- табы, 2 - поиск, 3 - нижнее меню, 4 - .. - элементы
@@ -207,7 +268,10 @@
     
     current.add_element('text');
     current.add_element('button');
-    
+    current.add_element('switch');
+    current.add_element('slider');
+    current.add_element('input_field');
+
     app.pages.forEach(function(a, index, arr){
         var option = Dom7(current_page_select).append('<option></option>').children().eq(-1);
         option.attr('value', index).text('Страница ' + index);
