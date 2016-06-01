@@ -33,13 +33,17 @@
         _container: 0,
         _element: 0,
         add_element: function(type){
-            this.element = add_page_element(this._page, this._container, type); //добавление элемента в модель
-            Dom7(current_page).append(types[type][type].get_view()); //вставка в DOM
+            this.element = add_page_element(this._page, this._container, type);
+            var container = Dom7(current_page).children().eq(this._container);
+            if(!container[0]){ //если контейнера нет, то отрисовать его прежде
+                container = Dom7(current_page).append('<div class="container"></div>').children().eq(-1);
+            }
+            container.append(types[type][type].get_view()); //вставка в DOM
         }
     }
     
     Dom7(current_container_select).change(function(e){
-        current.element = this.value>>0;
+        current.container = this.value>>0;
     });
     
     Dom7(current_element_select).change(function(e){
@@ -83,7 +87,11 @@
                         if(!index) return;
                         var option = Dom7(current_element_select).append('<option></option>').children().eq(-1);
                         option.attr('value', index).text(index + ': ' + element.type);
-                        Dom7(current_page).append(types[element.type][element.type].get_view());
+                        var container = Dom7(current_page).children().eq(current._container);
+                        if(!container[0]){ //если контейнера нет, то отрисовать его прежде
+                            container = Dom7(current_page).append('<div class="container"></div>').children().eq(-1);
+                        }
+                        container.append(types[element.type][element.type].get_view());
                     });
                     this.element = 1;
                 }
