@@ -12,6 +12,11 @@
 
 <body>
     <div style="border:1px solid black">
+        <select style="width:100%;" id="current_container_select">
+            <option value="0">Новый контейнер</option>
+        </select>
+    </div>
+    <div style="border:1px solid black">
         <select style="width:100%;" id="current_element_select"></select>
     </div>
     <div id="field_panel" style="border:1px solid black"></div>
@@ -25,12 +30,17 @@
     
     var current = {
         _page: 0,
+        _container: 0,
         _element: 0,
         add_element: function(type){
-            this.element = add_page_element(this._page, type); //добавление элемента в модель
+            this.element = add_page_element(this._page, this._container, type); //добавление элемента в модель
             Dom7(current_page).append(types[type][type].get_view()); //вставка в DOM
         }
     }
+    
+    Dom7(current_container_select).change(function(e){
+        current.element = this.value>>0;
+    });
     
     Dom7(current_element_select).change(function(e){
         current.element = this.value>>0;
@@ -47,36 +57,59 @@
             configurable: false,
             get: function(){ return app.pages[this._page]; },
             set: function(value){
-                this._page = value;
-                Dom7(current_page).html('');
-                if(!!app.pages[this._page]){
-                    app.pages[this._page].forEach(function(a, index, arr){
-                        var option = Dom7(current_element_select).append('<option></option>').children().eq(-1);
-                        option.attr('value', index).text(index + ': ' + a.type);
-                        Dom7(current_page).append(types[a.type][a.type].get_view());
+                this._page = value; //меняем страницу
+                Dom7(current_page).html(''); //очищаем макет
+                Dom7(current_container_select).html(''); //очищаем список контейнеров
+                if(!!app.pages[this._page]){ //если есть контейнеры, вывести их список
+                    app.pages[this._page].forEach(function(container, index){
+                        var option = Dom7(current_container_select).append('<option></option>').children().eq(-1);
+                        option.attr('value', index).text(index + ': контейнер');
                     });
-                    current.element = 0;
+                }
+                //всавляем добавить новый контейнер
+                var option = Dom7(current_container_select).append('<option></option>').children().eq(-1);
+                option.attr('value', option[0].index).text('<добавить новый контейнер>');
+                this.container = 0;
+            }
+        }, 'container': {
+            enumerable: true,
+            configurable: false,
+            get: function(){ return app.pages[this._page][this._container]; },
+            set: function(value){
+                this._container = value; //меняем контейнер
+                Dom7(current_element_select).html('');
+                if(!!app.pages[this._page][this._container]){ //если есть контейнер, получить список элементов
+                    app.pages[this._page][this._container].forEach(function(element, index){
+                        if(!index) return;
+                        var option = Dom7(current_element_select).append('<option></option>').children().eq(-1);
+                        option.attr('value', index).text(index + ': ' + element.type);
+                        Dom7(current_page).append(types[element.type][element.type].get_view());
+                    });
+                    this.element = 1;
                 }
             }
         }, 'element': {
             enumerable: true,
             configurable: false,
-            get: function(){ return app.pages[this._page][this._element]; },
+            get: function(){ return app.pages[this._page][this._container][this._element]; },
             set: function(value){
                 this._element = value;
                 Dom7(field_panel).html('');
-                if(!!app.pages[this._page][this._element]){
-                    out_element_param_fields(app.pages[this._page][this._element]);
+                if(!!app.pages[this._page][this._container][this._element]){
+                    out_element_param_fields(app.pages[this._page][this._container][this._element]);
                 }
             }
         }
     });
     
-    function add_page_element(page, type){
-        var index = app.pages[page].length; //индекс вставляемого элемента
-        var model = {type: type}; //вставляемый элемент
-        app.pages[page].push(model); //вставка элемента в модель
-        model.index = [page, index]; //в элементе его координаты
+    function add_page_element(page, container, type){
+        var index, model = {type: type}; //вставляемый элемент
+        if(app.pages[page].length == container){
+            app.pages[page].push([{type:'container', caption:'list'}]);
+        }
+        index = app.pages[page][container].length; //индекс вставляемого элемента
+        app.pages[page][container].push(model); //вставка элемента в модель
+        model.index = [page, container, index]; //в элементе его координаты
         Object.keys(types[type]).forEach(function(param){
             //установка в модели значения по умолчанию
             if(param != type) model[param] = types[type][param].default;
@@ -106,14 +139,14 @@
                 } else if(param_obj.field_type == 'select'){
                     input = p.append('<select></select>').children().eq(-1);
                     if(param_obj.field_options instanceof Array)
-                        param_obj.field_options.forEach(function(a, i, arr){
-                        var optgroup = input, optlabel = a.substring(0, 9);
+                        param_obj.field_options.forEach(function(option){
+                        var optgroup = input, optlabel = option.substring(0, 9);
                         if(optlabel == 'optgroup-'){
                             optgroup = input.append('<optgroup></optgroup>').children().eq(-1);
-                            optlabel = a.substring(9);
+                            optlabel = option.substring(9);
                             optgroup.attr('label', optlabel);
                         } else {
-                            optgroup.append('<option></option>').children().eq(-1).text(a);
+                            optgroup.append('<option></option>').children().eq(-1).text(option);
                         }
                         
                     });
@@ -275,7 +308,9 @@
     app.pages.forEach(function(a, index, arr){
         var option = Dom7(current_page_select).append('<option></option>').children().eq(-1);
         option.attr('value', index).text('Страница ' + index);
-    })
+    });
+    
+    current.page = 0;
     
     </script>
 </body>
