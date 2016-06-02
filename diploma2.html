@@ -24,6 +24,7 @@
         <select style="width:100%;" id="current_page_select"></select>
     </div>
     <div id="current_page" style="border:1px solid black"></div>
+    <div><textarea style="width:100%; height:430px;" id="model_textarea"></textarea></div>
     <script type="text/javascript">
     'use strict';
     //обновить представление по измененным параметрам
@@ -64,10 +65,19 @@
                 this._page = value; //меняем страницу
                 Dom7(current_page).html(''); //очищаем макет
                 Dom7(current_container_select).html(''); //очищаем список контейнеров
+                Dom7(current_element_select).html(''); //очищаем список элементов
                 if(!!app.pages[this._page]){ //если есть контейнеры, вывести их список
-                    app.pages[this._page].forEach(function(container, index){
+                    app.pages[this._page].forEach(function(container, num){
                         var option = Dom7(current_container_select).append('<option></option>').children().eq(-1);
-                        option.attr('value', index).text(index + ': контейнер');
+                        option.attr('value', num).text(num + ': контейнер');
+                        app.pages[current._page][current._container].forEach(function(element, index){
+                            if(!index) return;
+                            var container = Dom7(current_page).children().eq(current._container);
+                            if(!container[0]){ //если контейнера нет, то отрисовать его прежде
+                                container = Dom7(current_page).append('<div class="container"></div>').children().eq(-1);
+                            }
+                            container.append(types[element.type][element.type].get_view());
+                        });
                     });
                 }
                 //всавляем добавить новый контейнер
@@ -81,17 +91,12 @@
             get: function(){ return app.pages[this._page][this._container]; },
             set: function(value){
                 this._container = value; //меняем контейнер
-                Dom7(current_element_select).html('');
-                if(!!app.pages[this._page][this._container]){ //если есть контейнер, получить список элементов
-                    app.pages[this._page][this._container].forEach(function(element, index){
+                Dom7(current_element_select).html(''); //очищаем список элементов
+                if(!!app.pages[this._page] && !!app.pages[this._page][this._container]){
+                    app.pages[current._page][current._container].forEach(function(element, index){
                         if(!index) return;
                         var option = Dom7(current_element_select).append('<option></option>').children().eq(-1);
                         option.attr('value', index).text(index + ': ' + element.type);
-                        var container = Dom7(current_page).children().eq(current._container);
-                        if(!container[0]){ //если контейнера нет, то отрисовать его прежде
-                            container = Dom7(current_page).append('<div class="container"></div>').children().eq(-1);
-                        }
-                        container.append(types[element.type][element.type].get_view());
                     });
                     this.element = 1;
                 }
@@ -102,8 +107,9 @@
             get: function(){ return app.pages[this._page][this._container][this._element]; },
             set: function(value){
                 this._element = value;
-                Dom7(field_panel).html('');
-                if(!!app.pages[this._page][this._container][this._element]){
+                Dom7(field_panel).html(''); //очищаем список полей
+                if(!!app.pages[this._page] && !!app.pages[this._page][this._container]
+                    && !!app.pages[this._page][this._container][this._element]){
                     out_element_param_fields(app.pages[this._page][this._container][this._element]);
                 }
             }
@@ -114,6 +120,7 @@
         var index, model = {type: type}; //вставляемый элемент
         if(app.pages[page].length == container){
             app.pages[page].push([{type:'container', caption:'list'}]);
+            //Dom7(current_container).
         }
         index = app.pages[page][container].length; //индекс вставляемого элемента
         app.pages[page][container].push(model); //вставка элемента в модель
@@ -122,6 +129,7 @@
             //установка в модели значения по умолчанию
             if(param != type) model[param] = types[type][param].default;
         });
+        model_textarea.value = JSON.stringify(app, "", 2);
         return index;
     }
     
@@ -167,7 +175,8 @@
     function change_parameter(model, param, e){
         var old = model[param];
         model[param] = this.value;
-        types[model.type][param].update(param, 'update', model, Dom7(current_page).children().eq(model.index[1]), old);
+        types[model.type][param].update(param, 'update', model, Dom7(current_page).children().eq(model.index[1]).children().eq(model.index[2]), old);
+        model_textarea.value = JSON.stringify(app, "", 2);
     }
     
     var types = {
@@ -239,15 +248,6 @@
                     return '<div class="item-inner"> <div class="item-title label">Label</div> <div class="item-input"> <input type="text" placeholder="Введите текст"/> </div> </div>';
                 }
             },
-            /*'label' : {
-                default: 'Текст',
-                update: function(name, type, model, view, old){
-                    change_class(view, 'active', model[name]);
-                },
-                field_type: 'input',
-                field_label: 'Текст',
-                field_options: null
-            },*/
             'placeholder' : {
                 default: 'Введите текст',
                 update: function(name, type, model, view, old){
