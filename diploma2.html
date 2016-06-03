@@ -34,12 +34,10 @@
         _container: 0,
         _element: 0,
         add_element: function(type){
-            this.element = add_page_element(this._page, this._container, type);
-            var container = Dom7(current_page).children().eq(this._container);
-            if(!container[0]){ //если контейнера нет, то отрисовать его прежде
-                container = Dom7(current_page).append('<div class="container"></div>').children().eq(-1);
-            }
-            container.append(types[type][type].get_view()); //вставка в DOM
+            var el = add_page_element(this._page, this._container, type);
+            this.page = this._page;
+            current_element_select.selectedIndex = el - 1;
+            this.element = el;
         }
     }
     
@@ -75,12 +73,13 @@
                             var container = Dom7(current_page).children().eq(current._container);
                             if(!container[0]){ //если контейнера нет, то отрисовать его прежде
                                 container = Dom7(current_page).append('<div class="container"></div>').children().eq(-1);
+                                container.append('<p>Контйенер</p>');
                             }
                             container.append(types[element.type][element.type].get_view());
                         });
                     });
                 }
-                //всавляем добавить новый контейнер
+                //вставляем добавить новый контейнер
                 var option = Dom7(current_container_select).append('<option></option>').children().eq(-1);
                 option.attr('value', option[0].index).text('<добавить новый контейнер>');
                 this.container = 0;
@@ -98,8 +97,11 @@
                         var option = Dom7(current_element_select).append('<option></option>').children().eq(-1);
                         option.attr('value', index).text(index + ': ' + element.type);
                     });
-                    this.element = 1;
                 }
+                var option = Dom7(current_element_select).append('<option></option>').children().eq(-1);
+                option.attr('value', option[0].index + 1).text('<добавить новый элемент>');
+                this.element = 1;
+                
             }
         }, 'element': {
             enumerable: true,
@@ -108,9 +110,14 @@
             set: function(value){
                 this._element = value;
                 Dom7(field_panel).html(''); //очищаем список полей
-                if(!!app.pages[this._page] && !!app.pages[this._page][this._container]
-                    && !!app.pages[this._page][this._container][this._element]){
-                    out_element_param_fields(app.pages[this._page][this._container][this._element]);
+                if(!!app.pages[this._page] && !!app.pages[this._page][this._container]){
+                    if(!!app.pages[this._page][this._container][this._element]){
+                        out_element_param_fields(app.pages[this._page][this._container][this._element]);
+                    } else {
+                        out_new_element_param_fields();
+                    }
+                } else {
+                    out_new_element_param_fields();
                 }
             }
         }
@@ -120,7 +127,6 @@
         var index, model = {type: type}; //вставляемый элемент
         if(app.pages[page].length == container){
             app.pages[page].push([{type:'container', caption:'list'}]);
-            //Dom7(current_container).
         }
         index = app.pages[page][container].length; //индекс вставляемого элемента
         app.pages[page][container].push(model); //вставка элемента в модель
@@ -145,13 +151,17 @@
             if(param != model.type){
                 p = Dom7(field_panel).append('<p></p>').children().eq(-1);
                 
+                //подпись
                 label = p.append('<label></label>').children().eq(-1);
                 label.text(param_obj.field_label);
                 
+                //поле ввода текста
                 if(param_obj.field_type == 'input'){
                     input = p.append('<input type="text" />').children().eq(-1);
+                //чекбокс
                 } else if(param_obj.field_type == 'checkbox'){
                     input = p.append('<input type="checkbox" />').children().eq(-1);
+                //селект
                 } else if(param_obj.field_type == 'select'){
                     input = p.append('<select></select>').children().eq(-1);
                     if(param_obj.field_options instanceof Array)
@@ -169,6 +179,20 @@
                 }
                 input.change(change_parameter.bind(input[0], model, param));
             }
+        });
+    }
+    
+    function out_new_element_param_fields(){
+        var option, select, add;
+        select = Dom7(field_panel).append('<select></select>').children().eq(-1);
+        select.css('width', '50%');
+        Object.keys(types).forEach(function(type){
+            option = select.append('<option></option>').children().eq(-1);
+            option.text(type);
+        });
+        add = Dom7(field_panel).append('<button type="button"></button>').children().eq(-1);
+        add.text('Добавить').click(function(e){
+            current.add_element(select[0].value);
         });
     }
     
@@ -318,7 +342,7 @@
         option.attr('value', index).text('Страница ' + index);
     });
     
-    current.page = 0;
+    //current.page = 0;
     
     </script>
 </body>
