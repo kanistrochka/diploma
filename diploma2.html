@@ -61,6 +61,16 @@
             get: function(){ return app.pages[this._page]; },
             set: function(value){
                 this._page = value; //меняем страницу
+                
+                Dom7(current_page_select).html('');
+                app.pages.forEach(function(page, index){
+                var option = Dom7(current_page_select).append('<option></option>').children().eq(-1);
+                    option.attr('value', index).text('Страница ' + index);
+                });
+                var option = Dom7(current_page_select).append('<option></option>').children().eq(-1);
+                option.attr('value', option[0].index).text('<добавить новую страницу>');
+                current_page_select.selectedIndex = value;
+                
                 Dom7(current_page).html(''); //очищаем макет
                 Dom7(current_container_select).html(''); //очищаем список контейнеров
                 Dom7(current_element_select).html(''); //очищаем список элементов
@@ -68,12 +78,12 @@
                     app.pages[this._page].forEach(function(container, num){
                         var option = Dom7(current_container_select).append('<option></option>').children().eq(-1);
                         option.attr('value', num).text(num + ': контейнер');
-                        app.pages[current._page][current._container].forEach(function(element, index){
+                        app.pages[current._page][num].forEach(function(element, index){
                             if(!index) return;
-                            var container = Dom7(current_page).children().eq(current._container);
+                            var container = Dom7(current_page).children().eq(num);
                             if(!container[0]){ //если контейнера нет, то отрисовать его прежде
                                 container = Dom7(current_page).append('<div class="container"></div>').children().eq(-1);
-                                container.append('<p>Контйенер</p>');
+                                container.append('<p>Контейнер ' + num + '</p>');
                             }
                             container.append(types[element.type][element.type].get_view());
                         });
@@ -125,7 +135,10 @@
     
     function add_page_element(page, container, type){
         var index, model = {type: type}; //вставляемый элемент
-        if(app.pages[page].length == container){
+        if(app.pages.length <= page){ //при необходимости вставляем страницу
+            app.pages.push([]);
+        }
+        if(app.pages[page].length <= container){ //при необходимости вставляем контейнер
             app.pages[page].push([{type:'container', caption:'list'}]);
         }
         index = app.pages[page][container].length; //индекс вставляемого элемента
@@ -155,14 +168,13 @@
                 label = p.append('<label></label>').children().eq(-1);
                 label.text(param_obj.field_label);
                 
-                //поле ввода текста
-                if(param_obj.field_type == 'input'){
+                if(param_obj.field_type == 'input'){ //поле ввода текста
                     input = p.append('<input type="text" />').children().eq(-1);
-                //чекбокс
-                } else if(param_obj.field_type == 'checkbox'){
+                
+                } else if(param_obj.field_type == 'checkbox'){ //чекбокс
                     input = p.append('<input type="checkbox" />').children().eq(-1);
-                //селект
-                } else if(param_obj.field_type == 'select'){
+                
+                } else if(param_obj.field_type == 'select'){ //селект
                     input = p.append('<select></select>').children().eq(-1);
                     if(param_obj.field_options instanceof Array)
                         param_obj.field_options.forEach(function(option){
@@ -319,12 +331,7 @@
     
     //0 - верхнее меню, 1- табы, 2 - поиск, 3 - нижнее меню, 4 - .. - элементы
     var app = {
-        pages: [
-            [ //страница
-            ],
-            [ //страница
-            ]
-        ],
+        pages: [],
         modals: [],
         notifications: []
     }
@@ -336,11 +343,6 @@
     current.add_element('switch');
     current.add_element('slider');
     current.add_element('input_field');
-
-    app.pages.forEach(function(a, index, arr){
-        var option = Dom7(current_page_select).append('<option></option>').children().eq(-1);
-        option.attr('value', index).text('Страница ' + index);
-    });
     
     //current.page = 0;
     
