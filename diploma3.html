@@ -496,6 +496,86 @@
                 field_options: null
             }
         },
+        listitem: {
+            'listitem': {
+                is_container: false,
+                get_view: function(){
+                    return '<li><div class="item-content"><div class="item-media"><i class="icon icon-f7"></i></div><div class="item-inner"><div class="item-title"></div><div class="item-after"></div></div></div></li>';
+                }
+            },
+            'icon':{
+                default: '',
+                update: function(name, type, model, view, old){
+                    view = view.children().eq(0).children().eq(0).children().eq(0);
+                    change_class(view, 'icon', model[name] != '');
+                    change_class(view, 'icon-f7', model[name] != '');
+                },
+                field_type: 'input',
+                field_label: 'Иконка',
+                field_options: null
+            },
+            'text': {
+                default: '',
+                update: function(name, type, model, view, old){
+                    view.children().eq(0).children().eq(1).children().eq(0).text(model[name] || '');
+                },
+                field_type: 'input',
+                field_label: 'Текст',
+                field_options: null
+            },
+            'infotype':{
+                default: '',
+                update: function(name, type, model, view, old){
+                    view = view.children().eq(0).children().eq(1).children().eq(1);
+                    if(model[name] == 'badge'){
+                        view.html('')
+                        .append('<span></span>').children().eq(-1)
+                        .addClass('badge').text(model['info'] || '');
+                    } else if(model[name] == 'switch'){
+                        view.html('')
+                        .append('<label class="label-switch"><input type="checkbox"><div class="checkbox"></div></label>')
+                        .children().eq(0).children().eq(0).prop('checked', !!model['info']);
+                    } else {
+                        view.text(model['info'] || '');
+                    }
+                },
+                field_type: 'select',
+                field_label: 'Тип инфо',
+                field_options: ['text', 'badge', 'switch']
+            },
+            'info':{
+                default: '',
+                update: function(name, type, model, view, old){
+                    view = view.children().eq(0).children().eq(1).children().eq(1);
+                    if(model['infotype'] == 'badge'){
+                        view.html('')
+                        .append('<span></span>').children().eq(-1)
+                        .addClass('badge').text(model[name] || '');
+                    } else if(model['infotype'] == 'switch'){
+                        view.html('')
+                        .append('<label class="label-switch"><input type="checkbox"><div class="checkbox"></div></label>')
+                        .children().eq(0).children().eq(0).prop('checked', !!model[name]);
+                    } else {
+                        view.text(model[name] || '');
+                    }
+                },
+                field_type: 'input',
+                field_label: 'Инфо',
+                field_options: null
+            },
+            'link':{
+                default: '',
+                update: function(name, type, model, view, old){
+                    var h = view.children().html();
+                    view.html('');
+                    view.append((model[name] != '' ? '<a href="#" class="item-link"></a>' : '<div></div>'))
+                    .children().eq(-1).addClass('item-content').html(h);
+                },
+                field_type: 'input',
+                field_label: 'Ссылка',
+                field_options: null
+            }
+        },
         button: {
             'button': {
                 is_container: false,
