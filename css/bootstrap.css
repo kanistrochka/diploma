@@ -1059,6 +1059,8 @@ output {
   height: 34px;
   font-size: 14px;
   line-height: 1.42857143;
+  margin:5px 0;
+  padding:0px 1px;
   color: #555555;
   background-color: #ffffff;
   background-image: none;

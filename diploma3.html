@@ -90,6 +90,16 @@
         #phone .navbar-through .page-content{
             padding-top: 35px;
         }
+        
+        .center:not(.sliding){
+            height:44px;
+            line-height:44px;
+            text-align:center;
+        }
+        div.row{
+            justify-content: flex-start;
+            align-items: stretch;
+        }
     </style>
 </head>
 <body style="overflow:auto;background:linear-gradient(to top, #fe521e, #D41E88);">
@@ -123,7 +133,7 @@
                 <div class="col-66">
                     <select class="form-control col-100" id="current_page_select"></select>
                 </div>
-                <div class="col-33">
+                <div class="col-33" style="padding: 5px;">
                     <a href="#" class="btn btn-default" onclick="release_to_ios()">iOS style</a>
                     <a href="#" class="btn btn-default" onclick="release_to_material()">Android style</a>
                 </div>
@@ -135,12 +145,12 @@
                 <h3 class="bs-panel-title">Элементы</h3>
             </div>
             <div class="row bs-panel-body">
-                <div class="col-20">Контейнер</div>
-                <div class="col-80 form-group">
+                <div class="col-20 center">Контейнер</div>
+                <div class="col-30 form-group">
                     <select class="form-control col-100" id="current_container_select"></select>
                 </div>
-                <div class="col-20">Элемент</div>
-                <div class="col-80 form-group">
+                <div class="col-20 center">Элемент</div>
+                <div class="col-30 form-group">
                     <select class="form-control col-100" id="current_element_select"></select>
                 </div>
             </div>
@@ -240,7 +250,7 @@
                 if(!!app.pages[this._page]){ //если есть контейнеры, вывести их список
                     app.pages[this._page].forEach(function(container, num){
                         var option = Dom7(current_container_select).append('<option></option>').children().eq(-1);
-                        option.attr('value', num).text(num + ': контейнер');
+                        option.attr('value', num).text(num + ': ' + container[0].type);
                         app.pages[current._page][num].forEach(function(element, index){
                             if(!index) return;
                             var container_obj = Dom7(current_page).children().eq(num).children().eq(1);
@@ -351,17 +361,17 @@
                 p = Dom7(field_panel);
                 
                 //подпись
-                label = p.append('<div class="col-20"></div>').children().eq(-1);
+                label = p.append('<div class="col-20 center"></div>').children().eq(-1);
                 label.text(param_obj.field_label);
                 
                 if(param_obj.field_type == 'input'){ //поле ввода текста
-                    input = p.append('<div class="col-80"></div>').children().eq(-1).append('<input type="text" class="form-control" />').children().eq(-1);
+                    input = p.append('<div class="col-30"></div>').children().eq(-1).append('<input type="text" class="form-control" />').children().eq(-1);
                     input.prop('value', model[param]);
                 } else if(param_obj.field_type == 'checkbox'){ //чекбокс
-                    input = p.append('<div class="col-80"></div>').children().eq(-1).append('<input type="checkbox" />').children().eq(-1);
+                    input = p.append('<div class="col-30 center"></div>').children().eq(-1).append('<input type="checkbox" />').children().eq(-1);
                     input.prop('checked', !!model[param]);
                 } else if(param_obj.field_type == 'select'){ //селект
-                    input = p.append('<div class="col-80"></div>').children().eq(-1).append('<select class="form-control col-100"></select>').children().eq(-1);
+                    input = p.append('<div class="col-30"></div>').children().eq(-1).append('<select class="form-control col-100"></select>').children().eq(-1);
                     if(param_obj.field_options instanceof Array)
                         param_obj.field_options.forEach(function(option){
                         var optgroup = input, optlabel = option.substring(0, 9);
@@ -388,8 +398,8 @@
         for(var i = 0, select = []; i < 2; i++){
             if(!is_container && (i == 0) || !is_element && (i == 1)) continue;
             select[i] = Dom7(field_panel)
-                .append('<div class="col-20">' + (i == 0 ? 'Контейнер' : 'Элемент')+ '</div>')
-                .append('<div class="col-80 form-group"></div>').children().eq(-1)
+                .append('<div class="col-20 center">' + (i == 0 ? 'Контейнер' : 'Элемент')+ '</div>')
+                .append('<div class="col-30 form-group"></div>').children().eq(-1)
                 .append('<select class="form-control col-100"></select>').children().eq(-1);
             Object.keys(types).forEach(function(type){
                 if(types[type][type].is_container == (i != 0)) return false;
@@ -408,11 +418,19 @@
     }
     
     function change_parameter(model, param, e){
-        var old = model[param];
+        var view, old = model[param];
         if(this.type == 'text') model[param] = this.value;
         else if(this.type == 'checkbox') model[param] = this.checked;
         else if(this.type == 'select-one') model[param] = this.value;
-        types[model.type][param].update(param, 'update', model, Dom7(current_page).children().eq(model.index[1]).children().eq(1).children().eq(model.index[2] - 1), old);
+        
+        if(types[model.type][model.type].is_container){
+            view = Dom7(current_page).children().eq(current._container);
+            console.log(model);
+        } else {
+            view = Dom7(current_page).children().eq(model.index[1]).children().eq(1).children().eq(model.index[2] - 1);
+        }
+        
+        types[model.type][param].update(param, 'update', model, view, old);
         model_textarea.value = JSON.stringify(app, "", 2);
     }
     
@@ -421,38 +439,63 @@
             'contentblock': {
                 is_container: true,
                 get_view: function(){
-                    return '<div class="content-block"><div class="content-block-title">Заголовок</div><div></div></div>';
+                    return '<div class="content-block"><div class="content-block-title" style="display:none;"></div><div></div></div>';
                 }
+            },
+            'title': {
+                default: '',
+                update: function(name, type, model, view, old){
+                    view.children().eq(0)
+                    .css('display', (model[name] == '' ? 'none' : ''))
+                    .text(model[name] || '');
+                },
+                field_type: 'input',
+                field_label: 'Заголовок',
+                field_options: null
             }
         },
         buttonrow:{
             'buttonrow': {
                 is_container: true,
                 get_view: function(){
-                    return '<div class="content-block"><div class="content-block-title">Заголовок</div><div class="buttons-row"></div></div>';
+                    return '<div class="content-block"><div class="content-block-title" style="display:none;"></div><div class="buttons-row"></div></div>';
                 }
+            },
+            'title': {
+                default: '',
+                update: function(name, type, model, view, old){
+                    view.children().eq(0)
+                    .css('display', (model[name] == '' ? 'none' : ''))
+                    .text(model[name] || '');
+                },
+                field_type: 'input',
+                field_label: 'Заголовок',
+                field_options: null
             }
         },
         listview:{
             'listview': {
                 is_container: true,
                 get_view: function(){
-                    return '<div class="list-block"><div class="content-block-title">Заголовок</div><ul></ul></div>';
+                    return '<div class="list-block"><div class="content-block-title" style="display:none;"></div><ul></ul></div>';
                 }
             },
             'title': {
                 default: '',
                 update: function(name, type, model, view, old){
-                    view.text(model[name] || '');
+                    view.children().eq(0)
+                    .css('display', (model[name] == '' ? 'none' : ''))
+                    .text(model[name] || '');
                 },
                 field_type: 'input',
-                field_label: 'заголовок',
+                field_label: 'Заголовок',
                 field_options: null
             },
             'inset': {
                 default: false,
                 update: function(name, type, model, view, old){
-                    change_class(view, 'active', model[name]);
+                    console.log(view);
+                    change_class(view, 'inset', model[name]);
                 },
                 field_type: 'checkbox',
                 field_label: 'Закругленный',
@@ -463,8 +506,29 @@
             'accordion': {
                 is_container: true,
                 get_view: function(){
-                    return '<div class="list-block accordion-list"><div class="content-block-title">Заголовок</div><ul></ul></div>';
+                    return '<div class="list-block accordion-list"><div class="content-block-title" style="display:none;"></div><ul></ul></div>';
                 }
+            },
+            'title': {
+                default: '',
+                update: function(name, type, model, view, old){
+                    view.children().eq(0)
+                    .css('display', (model[name] == '' ? 'none' : ''))
+                    .text(model[name] || '');
+                },
+                field_type: 'input',
+                field_label: 'Заголовок',
+                field_options: null
+            },
+            'inset': {
+                default: false,
+                update: function(name, type, model, view, old){
+                    console.log(view);
+                    change_class(view, 'inset', model[name]);
+                },
+                field_type: 'checkbox',
+                field_label: 'Закругленный',
+                field_options: null
             }
         },
         text: {
@@ -508,10 +572,73 @@
                 update: function(name, type, model, view, old){
                     view = view.children().eq(0).children().eq(0).children().eq(0);
                     change_class(view, 'icon', model[name] != '');
-                    change_class(view, 'icon-f7', model[name] != '');
+                    change_class(view, 'icon-' + old, false);
+                    if(model[name] != '') change_class(view, 'icon-' + model[name], true);
+                },
+                field_type: 'select',
+                field_label: 'Иконка',
+                field_options: ['', 'f7', 'form-name', 'form-password', 'form-email', 'form-calendar', 'form-tel', 'form-gender', 'form-toggle', 'form-comment', 'form-settings', 'form-url']
+            },
+            'link':{
+                default: '',
+                update: function(name, type, model, view, old){
+                    var h = view.children().html();
+                    view.html('');
+                    view.append((model[name] != '' ? '<a href="#" class="item-link"></a>' : '<div></div>'))
+                    .children().eq(-1).addClass('item-content').html(h);
+                },
+                field_type: 'checkbox',
+                field_label: 'Ссылка',
+                field_options: null
+            },
+            'infotype':{
+                default: '',
+                update: function(name, type, model, view, old){
+                    view = view.children().eq(0).children().eq(1);
+                    view.children().eq(1).remove();
+                    
+                    if(model['info'] != ''){
+                        view = view.append('<div class="item-after"></div>').children().eq(-1);
+                        if(model[name] == 'badge'){
+                            view
+                            .append('<span></span>').children().eq(-1)
+                            .addClass('badge').text(model['info'] || '');
+                        } else if(model[name] == 'switch'){
+                            view
+                            .append('<label class="label-switch"><input type="checkbox"><div class="checkbox"></div></label>')
+                            .children().eq(0).children().eq(0).prop('checked', !!model['info']);
+                        } else {
+                            view.text(model['info'] || '');
+                        }
+                    }
+                },
+                field_type: 'select',
+                field_label: 'Тип инфо',
+                field_options: ['', 'text', 'badge', 'switch']
+            },
+            'info':{
+                default: '',
+                update: function(name, type, model, view, old){
+                    view = view.children().eq(0).children().eq(1);
+                    view.children().eq(1).remove();
+                    
+                    if(model[name] != ''){
+                        view = view.append('<div class="item-after"></div>').children().eq(-1);
+                        if(model['infotype'] == 'badge'){
+                            view.html('')
+                            .append('<span></span>').children().eq(-1)
+                            .addClass('badge').text(model[name] || '');
+                        } else if(model['infotype'] == 'switch'){
+                            view.html('')
+                            .append('<label class="label-switch"><input type="checkbox"><div class="checkbox"></div></label>')
+                            .children().eq(0).children().eq(0).prop('checked', !!model[name]);
+                        } else {
+                            view.text(model[name] || '');
+                        }
+                    }
                 },
                 field_type: 'input',
-                field_label: 'Иконка',
+                field_label: 'Инфо',
                 field_options: null
             },
             'text': {
@@ -523,57 +650,27 @@
                 field_label: 'Текст',
                 field_options: null
             },
-            'infotype':{
+            'input': {
                 default: '',
                 update: function(name, type, model, view, old){
-                    view = view.children().eq(0).children().eq(1).children().eq(1);
-                    if(model[name] == 'badge'){
-                        view.html('')
-                        .append('<span></span>').children().eq(-1)
-                        .addClass('badge').text(model['info'] || '');
-                    } else if(model[name] == 'switch'){
-                        view.html('')
-                        .append('<label class="label-switch"><input type="checkbox"><div class="checkbox"></div></label>')
-                        .children().eq(0).children().eq(0).prop('checked', !!model['info']);
-                    } else {
-                        view.text(model['info'] || '');
+                    view = view.children().eq(0).children().eq(1);
+                    change_class(view.children().eq(0), 'label', model[name] != '');
+                    view.children().eq(1).remove();
+                    
+                    if(model[name] != ''){
+                        view = view.append('<div class="item-input">').children().eq(-1);
+                        if(model[name] == 'checkbox'){
+                            view.append('<label class="label-switch"><input type="checkbox" /><div class="checkbox"></div></label>');
+                        } else if(model[name] == 'slider'){
+                            view.append('<div class="range-slider"><input type="range" min="0" max="100" value="50" step="1" /></div>');
+                        } else {
+                            view.append('<input type="' + model[name] + '" />');
+                        }
                     }
                 },
                 field_type: 'select',
-                field_label: 'Тип инфо',
-                field_options: ['text', 'badge', 'switch']
-            },
-            'info':{
-                default: '',
-                update: function(name, type, model, view, old){
-                    view = view.children().eq(0).children().eq(1).children().eq(1);
-                    if(model['infotype'] == 'badge'){
-                        view.html('')
-                        .append('<span></span>').children().eq(-1)
-                        .addClass('badge').text(model[name] || '');
-                    } else if(model['infotype'] == 'switch'){
-                        view.html('')
-                        .append('<label class="label-switch"><input type="checkbox"><div class="checkbox"></div></label>')
-                        .children().eq(0).children().eq(0).prop('checked', !!model[name]);
-                    } else {
-                        view.text(model[name] || '');
-                    }
-                },
-                field_type: 'input',
-                field_label: 'Инфо',
-                field_options: null
-            },
-            'link':{
-                default: '',
-                update: function(name, type, model, view, old){
-                    var h = view.children().html();
-                    view.html('');
-                    view.append((model[name] != '' ? '<a href="#" class="item-link"></a>' : '<div></div>'))
-                    .children().eq(-1).addClass('item-content').html(h);
-                },
-                field_type: 'input',
-                field_label: 'Ссылка',
-                field_options: null
+                field_label: 'Элемент формы',
+                field_options: ['', 'text', 'email', 'url', 'password', 'tel', 'date', 'datetime-local', 'checkbox', 'slider']
             }
         },
         button: {
@@ -591,6 +688,16 @@
                 field_type: 'input',
                 field_label: 'Текст',
                 field_options: null
+            },
+            'color':{
+                default: false,
+                update: function(name, type, model, view, old){
+                    change_class(view, 'color-' + old, false);
+                    change_class(view, 'color-' + model[name], true);
+                },
+                field_type: 'select',
+                field_label: 'Цвет',
+                field_options: ['optgroup-ios', 'white', 'black', 'blue', 'orange', 'red', 'pink', 'green', 'lightblue', 'yellow', 'gray', 'optgroup-material', 'red', 'pink', 'purple', 'deeppurple', 'indigo', 'blue', 'lightblue', 'cyan', 'teal', 'green', 'lightgreen', 'lime', 'yellow', 'amber', 'orange', 'deeporange', 'brown', 'gray', 'bluegray', 'black']
             },
             'filled': {
                 default: false,
@@ -611,70 +718,34 @@
                 field_type: 'checkbox',
                 field_label: 'Размер',
                 field_options: null
-            },
-            'color':{
-                default: false,
-                update: function(name, type, model, view, old){
-                    change_class(view, 'color-' + old, false);
-                    change_class(view, 'color-' + model[name], true);
-                },
-                field_type: 'select',
-                field_label: 'Цвет',
-                field_options: ['optgroup-ios', 'white', 'black', 'blue', 'orange', 'red', 'pink', 'green', 'lightblue', 'yellow', 'gray', 'optgroup-material', 'red', 'pink', 'purple', 'deeppurple', 'indigo', 'blue', 'lightblue', 'cyan', 'teal', 'green', 'lightgreen', 'lime', 'yellow', 'amber', 'orange', 'deeporange', 'brown', 'gray', 'bluegray', 'black']
             }
         },
-        input_field: {
-            'input_field' : {
+        accordionitem: {
+            'accordionitem': {
                 is_container: false,
                 get_view: function(){
-                    return '<div class="item-inner"> <div class="item-title label">Label</div> <div class="item-input"> <input type="text" placeholder="Введите текст"/> </div> </div>';
+                    return '<li class="accordion-item" onclick="this.classList.toggle(\'accordion-item-expanded\')"><a href="#" class="item-link item-content"><div class="item-inner"><div class="item-title"></div></div></a><div class="accordion-item-content"><div class="content-block"><p></p></div></div></li>';
                 }
             },
-            'placeholder' : {
-                default: 'Введите текст',
+            'text': {
+                default: '',
                 update: function(name, type, model, view, old){
-                    view.child().prop('placeholder', model[name] || '');
+                    view.children().eq(0).children().eq(0).children().eq(0).text(model[name] || '');
                 },
                 field_type: 'input',
                 field_label: 'Текст',
                 field_options: null
-            }
-        },
-        switch : {
-            'switch' : {
-                is_container: false,
-                get_view: function(){
-                    return '<div class="item-input">'+
-                            '<label class="label-switch">'+
-                            '<input type="checkbox"/>'+
-                            '<div class="checkbox"></div>'+
-                            '</label>'+
-                            '</div>';
-                }
             },
-            'switched' : {
-                default: false,
+            'text2': {
+                default: '',
                 update: function(name, type, model, view, old){
-                    change_class(view.child(), 'active-state', model[name]);
+                    view.children().eq(1).children().eq(0).children().eq(0).text(model[name] || '');
                 },
-                field_type: 'checkbox',
-                field_label: 'Включить',
+                field_type: 'input',
+                field_label: 'Текст2',
                 field_options: null
             }
-        },
-        slider : {
-            'slider' : {
-                is_container: false,
-                get_view: function(){
-                    return '<div class="item-input">'+
-                            '<div class="range-slider">'+
-                            '<input type="range" min="0" max="100" value="50" step="0.1"/>'+
-                            '</div>' +
-                            '</div>';
-                }
-            }
         }
-
     }
     
     //0 - верхнее меню, 1- табы, 2 - поиск, 3 - нижнее меню, 4 - .. - элементы
